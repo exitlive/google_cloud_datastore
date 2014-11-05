@@ -125,8 +125,12 @@ class PropertyType<T> {
   /**
    * A [LIST] property is a multi valued property. The list generic can be any of
    * [DYNAMIC], [BOOLEAN], [INTEGER], [DOUBLE], [STRING], [BLOB], [DATE_TIME] or [KEY].
+   *
+   * Returns the canonical List property type associated with the given [genericType]
    */
-  static PropertyType<List> LIST([PropertyType genericType = DYNAMIC]) => new _ListPropertyType(genericType);
+  static PropertyType<List> LIST([PropertyType genericType = DYNAMIC]) =>
+      ListPropertyType._VALID_TYPES
+      .singleWhere((type) => type.generic == genericType);
 
   //The string representation of the type
   final String _repr;
@@ -158,8 +162,8 @@ class PropertyType<T> {
     return value;
   }
 
-  _PropertyInstance create(String prop, {dynamic initialValue}) =>
-      new _PropertyInstance(prop, this, initialValue: checkType(prop, initialValue));
+  _Value create(String prop, {dynamic initialValue}) =>
+      new _Value(prop, this, initialValue: checkType(prop, initialValue));
 
   static _boolToSchemaValue(schema.Value value, bool b) {
     if (b != null)
@@ -258,37 +262,56 @@ class PropertyType<T> {
 
 }
 
-class _ListPropertyType<T> implements PropertyType<List<T>> {
+class ListPropertyType<T> implements PropertyType<List<T>> {
+  /// A list of [PropertyType.BOOLEAN] values
+  static const BOOLEAN = const ListPropertyType._(PropertyType.BOOLEAN);
+  /// A list of [PropertyType.INTEGER] values
+  static const INTEGER = const ListPropertyType._(PropertyType.INTEGER);
+  /// A list of [PropertyType.DOUBLE] values
+  static const DOUBLE = const ListPropertyType._(PropertyType.DOUBLE);
+  /// A list of [PropertyType.STRING] values
+  static const STRING = const ListPropertyType._(PropertyType.STRING);
+  /// A list of [PropertyType.KEY] values
+  static const KEY = const ListPropertyType._(PropertyType.KEY);
+  /// A list of [PropertyType.DATE_TIME] values
+  static const DATE_TIME = const ListPropertyType._(PropertyType.DATE_TIME);
+  /// A list of [PropertyType.BLOB] values
+  static const BLOB = const ListPropertyType._(PropertyType.BLOB);
+
+  /// A list of [PropertyType.DYNAMIC] values
+  static const DYNAMIC = const ListPropertyType._(PropertyType.DYNAMIC);
+
+
+  static const _VALID_TYPES =
+      const [BOOLEAN, INTEGER, DOUBLE, STRING, KEY, DATE_TIME, BLOB, DYNAMIC];
+
+
 
   final PropertyType generic;
-  //Unused.
-  String _repr;
+
+  //unused
+  final String _repr = "";
+
+  const ListPropertyType._(PropertyType this.generic);
+
 
   _ToSchemaValue get _toSchemaValue {
-    return (schema.Value value, _ListValue<T> listValue) {
-      value.listValue.addAll(
-          listValue.map((elem) => generic._toSchemaValue(new schema.Value(), elem))
-      );
-      return value;
+    return (schema.Value schemaValue, List<T> value) {
+      schemaValue.listValue
+          ..addAll(value.map((elem) => generic._toSchemaValue(new schema.Value(), elem)));
+      return schemaValue;
     };
   }
 
   _FromSchemaValue get _fromSchemaValue {
     return (schema.Value schemaValue) {
-      _ListValue<T> list = new _ListValue<T>(generic)
-        ..addAll(schemaValue.listValue.map(generic._fromSchemaValue));
-      return list;
+      return new List<T>()
+          ..addAll(schemaValue.listValue.map(generic._fromSchemaValue));
     };
   }
 
-  _ListPropertyType(PropertyType this.generic) {
-    if (generic is _ListPropertyType) {
-      throw new PropertyException("Invalid property type (nested list)");
-    }
-  }
-
-  _PropertyInstance create(String propertyName, {List<T> initialValue}) =>
-      new _ListPropertyInstance(propertyName, this, initialValue: initialValue);
+  _Value create(String propertyName, {List<T> initialValue}) =>
+      new _ListValue(propertyName, this, initialValue: initialValue);
 
   List<T> checkType(String prop, var value) {
     if (value is List<T>) {
@@ -298,12 +321,6 @@ class _ListPropertyType<T> implements PropertyType<List<T>> {
   }
 
   toString() => "list<${generic._repr}>";
-
-  //TODO: Remove this if statics are ever const-able
-  bool operator ==(Object other) =>
-      other is _ListPropertyType && other.generic == generic;
-
-  int get hashCode => 37 * generic.hashCode;
 }
 
 class PropertyException implements Exception {
@@ -311,5 +328,4 @@ class PropertyException implements Exception {
   PropertyException(this.message);
 
   String toString() => "Invalid Property: $message";
-
 }

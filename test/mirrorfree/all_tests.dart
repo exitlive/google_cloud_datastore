@@ -11,6 +11,7 @@ import 'lookup_test.dart' as lookup;
 import 'mutation_test.dart' as mutation;
 import 'query_test.dart' as query;
 import 'subtyping_test.dart' as subtyping;
+import 'transactions/transaction_test.dart' as transaction;
 
 void main() {
   group("mirrorfree", () {
@@ -20,5 +21,6 @@ void main() {
     mutation.main();
     query.main();
     subtyping.main();
+    transaction.main();
   });
 }

@@ -4,6 +4,7 @@
 library  datastore.common;
 
 import 'dart:async';
+import 'dart:math' as math;
 import 'dart:typed_data';
 import 'dart:collection';
 
@@ -22,7 +23,7 @@ part 'common/kind.dart';
 part 'common/entity.dart';
 part 'common/filter.dart';
 part 'common/property.dart';
-part 'common/property_instance.dart';
+part 'common/value.dart';
 part 'common/query.dart';
 part 'common/transaction.dart';
 
@@ -36,6 +37,7 @@ Logger datastoreLogger = new Logger("datastore");
 class Datastore {
   static final Map<String, KindDefinition> _entityKinds = new Map();
   final DatastoreConnection connection;
+  TransactionScheduler _scheduler;
 
   /**
    * Clear the known kinds from the datastore.
@@ -57,6 +59,7 @@ class Datastore {
   set logger(Logger logger) {
     datastoreLogger = logger;
     connection.logger = new Logger('${datastoreLogger.fullName}.connection');
+    _scheduler.logger = new Logger('${datastoreLogger.fullName}.transaction');
   }
 
   /**
@@ -66,8 +69,12 @@ class Datastore {
    * authorised to access the datastore.
    * [datasetId] is the name of the dataset to connect to, usally
    */
-  Datastore.withKinds(DatastoreConnection this.connection, List<KindDefinition> entityKinds) {
+  Datastore.withKinds(DatastoreConnection connection, List<KindDefinition> entityKinds):
+    this.connection = connection,
+    this._scheduler = new TransactionScheduler(connection)
+  {
     connection.logger = new Logger('${datastoreLogger.fullName}.connection');
+    _scheduler.logger = new Logger('${datastoreLogger.fullName}.transaction');
     entityKinds.forEach((kind) {
       _entityKinds.putIfAbsent(kind.name, () => kind);
     });
@@ -501,19 +508,8 @@ class Datastore {
    *
    * Returns the committed transaction.
    */
-  Future<Transaction> withTransaction(dynamic action(Transaction transaction)) {
-    return Transaction.begin(this).then((transaction) {
-      return new Future.sync(() {
-        return action(transaction);
-      }).then((_) {
-        if (transaction.isCommitted){
-          return transaction;
-        } else {
-          return transaction.commit();
-        }
-      });
-    });
-  }
+  Future<Transaction> withTransaction(dynamic action(Transaction transaction)) =>
+      _scheduler.withTransaction(action);
 }
 
 class NoSuchKindError extends Error {

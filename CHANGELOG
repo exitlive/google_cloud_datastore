@@ -1,3 +1,18 @@
+version 0.5.0
+=============
+
+Breaking changes
+- Requests are automatically retried (safely) with exponential backoff when
+  receiving one of the standard 'retryRequest' responses
+
+Features
+- Added an improved transaction scheduler.
+- Deprecated `DatastoreConnection.open` in preference for a synchronous
+  method for creating a connection to the datastore. The
+
+bugfixes
+- ListPropertyTypes are canonicalised and can be used in @Property annotations
+  correctly.
 
 version 0.4.1
 =============

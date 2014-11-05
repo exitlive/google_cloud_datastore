@@ -5,6 +5,8 @@ import 'package:unittest/unittest.dart';
 import '../../lib/src/connection.dart';
 import '../../lib/src/common.dart';
 
+import '../connection_details.dart';
+
 void main() {
   //Test sepeartely since we don't want to clear the kind cache
   group("datastore creation", () {
@@ -13,10 +15,8 @@ void main() {
     DatastoreConnection connection;
 
     setUp(() {
-      return DatastoreConnection.open('41795083', 'crucial-matter-487',
-                host: 'http://127.0.0.1:5961').then((conn) {
-        connection = conn;
-      });
+      connection = DatastoreConnection.openSync(DATASET_ID, host: HOST);
+
     });
 
     //TODO: Test that datastore caches kinds.

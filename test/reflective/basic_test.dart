@@ -12,6 +12,7 @@ import 'package:unittest/unittest.dart';
 
 import '../../lib/datastore.dart';
 import '../mirrorfree/kinds.dart' as mirrorfree_kinds;
+import '../connection_details.dart';
 
 class MyBool {
   final bool isTrue;
@@ -40,6 +41,7 @@ class User extends Entity {
 
   @Property(type: PropertyType.BOOLEAN)
   MyBool get isAdmin => new MyBool(getProperty("isAdmin"));
+
   @Property()
   List<Key> get friends => getProperty("friends");
 }
@@ -55,16 +57,13 @@ void main() {
     Datastore datastore;
     bool logging = false;
     setUp(() {
-      return DatastoreConnection.open('41795083', 'crucial-matter-487',
-          host: 'http://127.0.0.1:5961').then((conn) {
-        connection = conn;
-        Datastore.clearKindCache();
-        datastore = new Datastore(conn);
-        if (!logging) {
-          datastore.logger.onRecord.listen(print);
-          logging = true;
-        }
-      });
+      connection = DatastoreConnection.openSync(DATASET_ID, host: HOST);
+      Datastore.clearKindCache();
+      datastore = new Datastore(connection);
+      if (!logging) {
+        datastore.logger.onRecord.listen(print);
+        logging = true;
+      }
     });
 
     test("reflected user kind should be identical to mirrorfree kind", () {

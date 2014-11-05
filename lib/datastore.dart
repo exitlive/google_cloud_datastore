@@ -41,6 +41,7 @@ class Datastore extends base.Datastore {
   static KindDefinition kindByName(String name) => base.Datastore.kindByName(name);
   static PropertyDefinition propByName(String kind, String name) => base.Datastore.propByName(kind, name);
 
+
   Datastore._(DatastoreConnection connection, List<KindDefinition> entityKinds):
     super.withKinds(connection, entityKinds);
 

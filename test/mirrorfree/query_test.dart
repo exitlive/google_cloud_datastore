@@ -10,6 +10,7 @@ import '../../lib/src/connection.dart';
 import '../../lib/src/common.dart';
 
 import '../logging.dart';
+import '../connection_details.dart';
 import 'kinds.dart';
 
 void main() {
@@ -21,10 +22,9 @@ void main() {
     setUp(() {
       //Do once, rather than on every time the datastore is set up
       Datastore.clearKindCache();
-      return DatastoreConnection.open('41795083', 'crucial-matter-487',
-                  host: 'http://127.0.0.1:5961').then((conn) {
-        datastore = new Datastore.withKinds(conn, mirrorfreeKinds);
-      });
+      var connection = DatastoreConnection.openSync(
+          DATASET_ID, host: HOST);
+      datastore = new Datastore.withKinds(connection, mirrorfreeKinds);
     });
 
     group("construction", () {

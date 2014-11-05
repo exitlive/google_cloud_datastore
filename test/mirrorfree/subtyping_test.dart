@@ -7,6 +7,7 @@ library mirrorfree_test.subtyping;
 import 'package:unittest/unittest.dart';
 
 import '../logging.dart';
+import '../connection_details.dart';
 
 import '../../lib/src/connection.dart';
 import '../../lib/src/common.dart';
@@ -41,11 +42,8 @@ void main() {
         ..addAll([concreteBase, errKind, notDirectSubkind]);
 
     setUp(() {
-      return DatastoreConnection.open('41795083', 'crucial-matter-487',
-         host: 'http://127.0.0.1:5961').then((connection) {
-       Datastore.clearKindCache();
-       datastore = new Datastore.withKinds(connection, testKinds);
-     });
+      var connection = DatastoreConnection.openSync(DATASET_ID, host: HOST);
+      datastore = new Datastore.withKinds(connection, testKinds);
     });
 
     test("Should inherit properties", () {

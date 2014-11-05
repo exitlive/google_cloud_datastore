@@ -60,60 +60,58 @@ void main(List<String> args) {
 
   //Open a connection to the datastore. Only one connection needs to be
   //open for the lifetime of the application.
-  DatastoreConnection.open(
-      null,
+  var connection = DatastoreConnection.openSync(
       datasetId,
-      host: 'http://127.0.0.1:6060').then((connection) {
+      host: 'http://127.0.0.1:6060');
 
-    Datastore datastore = new Datastore(connection);
+  Datastore datastore = new Datastore(connection);
 
-    datastore.logger.onRecord.listen(print);
+  datastore.logger.onRecord.listen(print);
 
-    Completer<Trivia> triviaCompleter = new Completer<Trivia>();
+  Completer<Trivia> triviaCompleter = new Completer<Trivia>();
 
-    //Run an insert action in a transaction context.
-    //The transaction will automatically be committed
-    //once the transaction returns
-    datastore.withTransaction(
-        (Transaction transaction) {
-          var key = new Key("Trivia", name: "hgtg");
+  //Run an insert action in a transaction context.
+  //The transaction will automatically be committed
+  //once the transaction returns
+  datastore.withTransaction(
+      (Transaction transaction) {
+        var key = new Key("Trivia", name: "hgtg");
 
-          //Check whether the key is present. Ideally datastore transactions should
-          //be idempotent, so look up the entity as it existed at the start of the
-          //transaction
-          return datastore.lookup(key)
-              .then((entityResult) {
-                if (entityResult.isPresent) {
-                  triviaCompleter.complete(entityResult.entity);
-                  return;
-                }
-                Trivia trivia = new Trivia(
-                    key,
-                    question: "Meaning of life?",
-                    answer: 42);
+        //Check whether the key is present. Ideally datastore transactions should
+        //be idempotent, so look up the entity as it existed at the start of the
+        //transaction
+        return datastore.lookup(key)
+            .then((entityResult) {
+              if (entityResult.isPresent) {
+                triviaCompleter.complete(entityResult.entity);
+                return;
+              }
+              Trivia trivia = new Trivia(
+                  key,
+                  question: "Meaning of life?",
+                  answer: 42);
 
-                // Add the enitity to the list of entities
-                // to insert when the transaction is committed.
-                transaction.insert.add(trivia);
-                triviaCompleter.complete(trivia);
-              });
-        })
-        .catchError(triviaCompleter.completeError);
+              // Add the enitity to the list of entities
+              // to insert when the transaction is committed.
+              transaction.insert.add(trivia);
+              triviaCompleter.complete(trivia);
+            });
+      })
+      .catchError(triviaCompleter.completeError);
 
-    triviaCompleter.future.then((Trivia trivia) {
-      print(trivia.question);
+  triviaCompleter.future.then((Trivia trivia) {
+    print(trivia.question);
+    stdout.write("> ");
+    stdin.listen((bytes) {
+      var input = UTF8.decode(bytes);
+      var answer = input.trim().toLowerCase();
+      if (answer == trivia.answer.toString()) {
+        print("Don't panic!");
+      } else {
+        print( 'fascinating, extraordinary and, '
+               'when you think hard about it, completely obvious.');
+      }
       stdout.write("> ");
-      stdin.listen((bytes) {
-        var input = UTF8.decode(bytes);
-        var answer = input.trim().toLowerCase();
-        if (answer == trivia.answer.toString()) {
-          print("Don't panic!");
-        } else {
-          print( 'fascinating, extraordinary and, '
-                 'when you think hard about it, completely obvious.');
-        }
-        stdout.write("> ");
-      });
     });
   });
 

@@ -38,10 +38,11 @@ class Entity {
   final Map<String,dynamic> _propertyInits;
   PropertyMap _properties = null;
 
+
   /**
    * A cache of the entities associated with foreign keys on the entity
    */
-  final Map<String, /* Key | List<Key> */ dynamic> _fkCache = new Map();
+  final Map<String, /* Value<Key> | List<Value<Key>> */ dynamic> _fkCache = new Map();
 
   /**
    * Initialise the entity properties.
@@ -161,7 +162,7 @@ class Entity {
     schema.Entity schemaEntity = new schema.Entity();
     schemaEntity.key = key._toSchemaKey();
     var kindProperties = (subkind != null) ? subkind.properties : kind.properties;
-    _properties.forEach((String name, _PropertyInstance prop) {
+    _properties.forEach((String name, _Value prop) {
       var defn = kindProperties[name];
       assert(defn != null);
       schemaEntity.property.add(prop._toSchemaProperty(defn));
@@ -235,9 +236,9 @@ class EntityResult<T extends Entity> {
   }
 }
 
-class PropertyMap extends UnmodifiableMapMixin<String,_PropertyInstance> {
+class PropertyMap extends UnmodifiableMapMixin<String,_Value> {
   final KindDefinition kind;
-  Map<String,_PropertyInstance> _entityProperties;
+  Map<String,_Value> _entityProperties;
 
   PropertyMap(KindDefinition this.kind, Map<String,dynamic> propertyInits) :
     _entityProperties = new Map() {
@@ -251,7 +252,7 @@ class PropertyMap extends UnmodifiableMapMixin<String,_PropertyInstance> {
   }
 
   @override
-  _PropertyInstance operator [](String key) {
+  _Value operator [](String key) {
     if (!containsKey(key))
       throw new NoSuchPropertyError(kind, key);
     return _entityProperties[key];
@@ -261,10 +262,10 @@ class PropertyMap extends UnmodifiableMapMixin<String,_PropertyInstance> {
   bool containsKey(String key) => _entityProperties.containsKey(key);
 
   @override
-  bool containsValue(_PropertyInstance value) => _entityProperties.containsValue(value);
+  bool containsValue(_Value value) => _entityProperties.containsValue(value);
 
   @override
-  void forEach(void f(String key, _PropertyInstance value)) {
+  void forEach(void f(String key, _Value value)) {
     _entityProperties.forEach(f);
   }
 
@@ -281,5 +282,5 @@ class PropertyMap extends UnmodifiableMapMixin<String,_PropertyInstance> {
   int get length => _entityProperties.length;
 
   @override
-  Iterable<_PropertyInstance> get values => _entityProperties.values;
+  Iterable<_Value> get values => _entityProperties.values;
 }

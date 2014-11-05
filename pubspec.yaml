@@ -1,10 +1,10 @@
 name: google_cloud_datastore
-version: 0.4.1+4
+version: 0.5.0-pre3
 author: Thomas Stephenson <ovangle@gmail.com>
 description: Connect to a google cloud datastore via the protocol buffer api
 homepage: http://github.com/ovangle/googleclouddatastore
 dependencies:
-  google_oauth2_client: '>=0.3.7 <0.4.0'
+  google_oauth2_client: '>=0.4.0 <0.5.0'
   http: '>=0.11.0 <0.12.0'
   logging: '>=0.9.0 <0.10.0'
   protobuf: '>=0.3.3 <0.4.0'
